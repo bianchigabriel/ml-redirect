@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Abriendo MercadoLibre...</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: sans-serif;
       display: flex;
@@ -16,40 +17,143 @@
       background: #fff;
     }
     .logo { font-size: 28px; font-weight: bold; color: #2D3277; margin-bottom: 16px; }
-    .msg  { color: #555; font-size: 15px; margin-bottom: 32px; }
+    .msg  { color: #555; font-size: 15px; margin-bottom: 32px; text-align: center; padding: 0 24px; }
     .btn  {
       background: #FFE600; color: #2D3277; font-weight: bold;
       padding: 14px 32px; border-radius: 8px; text-decoration: none;
-      font-size: 16px; border: none; cursor: pointer;
+      font-size: 16px; border: none; cursor: pointer; display: inline-block;
+    }
+
+    /* Modal para in-app browsers */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+    }
+    .overlay.visible { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      padding: 28px 24px 40px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+    .modal h2 { font-size: 18px; color: #2D3277; margin: 0 0 12px; }
+    .modal p  { font-size: 14px; color: #555; margin: 0 0 24px; line-height: 1.5; }
+    .modal .steps { text-align: left; font-size: 14px; color: #333; margin-bottom: 24px; line-height: 2; }
+    .modal .steps span { font-weight: bold; }
+    .modal .btn-chrome {
+      background: #2D3277; color: #fff; font-weight: bold;
+      padding: 14px 32px; border-radius: 8px; text-decoration: none;
+      font-size: 16px; display: block; margin-bottom: 12px;
+    }
+    .modal .btn-skip {
+      background: none; border: none; color: #999;
+      font-size: 14px; cursor: pointer; text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="logo">mercadolibre</div>
-  <div class="msg">Abriendo la app...</div>
+  <div class="msg" id="msg">Abriendo la app...</div>
   <a class="btn" id="fallback" href="https://mercadolibre.com/sec/2LpnQs3">
     Abrir en el navegador
   </a>
 
+  <!-- Modal: in-app browser detectado -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2>Abrí en tu navegador</h2>
+      <p>Este enlace necesita abrirse fuera de esta app para funcionar correctamente.</p>
+      <div class="steps" id="steps"></div>
+      <a class="btn-chrome" id="chromeBtn" href="https://mercadolibre.com/sec/2LpnQs3">
+        Abrir en Chrome
+      </a>
+      <button class="btn-skip" onclick="document.getElementById('overlay').classList.remove('visible')">
+        Cancelar
+      </button>
+    </div>
+  </div>
+
   <script>
-    var DEEPLINK  = "meli://webview?url=https%3A%2F%2Fmercadolibre.com%2Fsec%2F2LpnQs3";
-    var FALLBACK  = "https://mercadolibre.com/sec/2LpnQs3";
+    var DEEPLINK     = "meli://webview?url=https%3A%2F%2Fmercadolibre.com%2Fsec%2F2LpnQs3";
+    var FALLBACK     = "https://mercadolibre.com/sec/2LpnQs3";
+    var PAGE_URL     = "https://bianchigabriel.github.io/ml-redirect/";
 
-    // Intenta abrir la app
-    window.location.href = DEEPLINK;
+    // Detecta in-app browsers conocidos
+    function detectInAppBrowser() {
+      var ua = navigator.userAgent;
+      if (/musical_ly|TikTok/i.test(ua))   return "tiktok";
+      if (/Instagram/i.test(ua))            return "instagram";
+      if (/FBAN|FBAV|FB_IAB/i.test(ua))     return "facebook";
+      if (/Twitter/i.test(ua))              return "twitter";
+      if (/Line\//i.test(ua))               return "line";
+      if (/MicroMessenger/i.test(ua))       return "wechat";
+      // WebView genérico en Android (sin Chrome)
+      if (/Android/i.test(ua) && /wv\)/i.test(ua) && !/Chrome/i.test(ua)) return "webview";
+      return null;
+    }
 
-    // Si la app no está instalada o el deeplink falla, redirige al browser
-    var timer = setTimeout(function () {
-      window.location.href = FALLBACK;
-    }, 1500);
+    // Intent URL para forzar apertura en Chrome (Android)
+    function buildChromeIntent(url) {
+      var path = url.replace(/^https?:\/\//, "");
+      return "intent://" + path + "#Intent;scheme=https;package=com.android.chrome;end";
+    }
 
-    // Si la app se abrió, la página queda en background → cancela el timer
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) clearTimeout(timer);
-    });
-    window.addEventListener("blur", function () {
-      clearTimeout(timer);
-    });
+    // Instrucciones según el browser
+    function getSteps(browser) {
+      var menuIcon = "⋮";
+      switch (browser) {
+        case "tiktok":
+          return "1. Tocá <span>" + menuIcon + "</span> arriba a la derecha<br>2. Seleccioná <span>\"Abrir en el navegador\"</span>";
+        case "instagram":
+          return "1. Tocá <span>⋯</span> arriba a la derecha<br>2. Seleccioná <span>\"Abrir en Chrome\"</span> o <span>\"Abrir en el navegador\"</span>";
+        case "facebook":
+          return "1. Tocá <span>" + menuIcon + "</span> arriba a la derecha<br>2. Seleccioná <span>\"Abrir con el navegador\"</span>";
+        default:
+          return "1. Tocá el menú <span>" + menuIcon + "</span> de tu app<br>2. Seleccioná <span>\"Abrir en el navegador\"</span>";
+      }
+    }
+
+    var inApp = detectInAppBrowser();
+
+    if (inApp) {
+      // Mostrar modal con instrucciones
+      document.getElementById("msg").textContent = "Un momento...";
+      document.getElementById("steps").innerHTML = getSteps(inApp);
+      document.getElementById("overlay").classList.add("visible");
+
+      // Intentar romper el WebView abriendo Chrome directamente (funciona en algunos)
+      var chromeIntent = buildChromeIntent(PAGE_URL);
+      document.getElementById("chromeBtn").href = chromeIntent;
+
+      // Fallback del botón de Chrome: si intent:// no funciona, ir al FALLBACK web
+      document.getElementById("chromeBtn").addEventListener("click", function(e) {
+        setTimeout(function() {
+          // Si seguimos aquí, el intent no funcionó — ir directo a web
+          window.location.href = FALLBACK;
+        }, 1500);
+      });
+
+    } else {
+      // Flujo normal: intentar abrir la app
+      window.location.href = DEEPLINK;
+
+      var timer = setTimeout(function() {
+        window.location.href = FALLBACK;
+      }, 1500);
+
+      document.addEventListener("visibilitychange", function() {
+        if (document.hidden) clearTimeout(timer);
+      });
+      window.addEventListener("blur", function() {
+        clearTimeout(timer);
+      });
+    }
   </script>
 </body>
 </html>
