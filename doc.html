@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documento - MercadoLibre</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #FFE600;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+    }
+    header span {
+      font-size: 22px;
+      font-weight: bold;
+      color: #2D3277;
+    }
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+    /* Vista desktop: iframe */
+    .pdf-frame {
+      width: 100%;
+      max-width: 860px;
+      height: 80vh;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      display: block;
+    }
+    /* Vista mobile: no mostramos iframe, solo botón */
+    .mobile-card {
+      display: none;
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      max-width: 360px;
+      width: 100%;
+    }
+    .mobile-card .icon { font-size: 48px; margin-bottom: 16px; }
+    .mobile-card h2 { font-size: 18px; color: #2D3277; margin-bottom: 8px; }
+    .mobile-card p  { font-size: 14px; color: #777; margin-bottom: 24px; line-height: 1.5; }
+    .btn-open {
+      display: inline-block;
+      background: #FFE600;
+      color: #2D3277;
+      font-weight: bold;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 16px;
+    }
+    @media (max-width: 600px) {
+      .pdf-frame  { display: none; }
+      .mobile-card { display: block; }
+    }
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span>mercadolibre</span>
+  </header>
+
+  <div class="container">
+
+    <!-- Desktop: embed PDF -->
+    <iframe
+      class="pdf-frame"
+      src="ml_button_final.pdf"
+      title="Documento MercadoLibre">
+    </iframe>
+
+    <!-- Mobile: botón para abrir -->
+    <div class="mobile-card">
+      <div class="icon">📄</div>
+      <h2>Documento disponible</h2>
+      <p>Tocá el botón para ver el documento con tu oferta exclusiva.</p>
+      <a class="btn-open" href="ml_button_final.pdf" target="_blank">
+        Ver documento
+      </a>
+    </div>
+
+  </div>
+
+  <footer>© 2024 MercadoLibre</footer>
+
+</body>
+</html>
